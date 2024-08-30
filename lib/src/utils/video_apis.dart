@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import '../controllers/pod_url_cache_singleton.dart';
 import '../models/vimeo_models.dart';
 
 String podErrorString(String val) {
@@ -84,6 +85,12 @@ class VideoApis {
     String videoId,
     Map<String, String> httpHeader,
   ) async {
+    final podCache = PodUrlCacheSingleton();
+    final cachedUrls = podCache.getUrls(videoId);
+    if (cachedUrls.isNotEmpty) {
+      return cachedUrls;
+    }
+
     try {
       final response = await http.get(
         Uri.parse('https://api.vimeo.com/videos/$videoId'),
@@ -106,6 +113,9 @@ class VideoApis {
           );
         }
       }
+
+      podCache.addUrls(videoId, list);
+
       return list;
     } catch (error) {
       if (error.toString().contains('XMLHttpRequest')) {
