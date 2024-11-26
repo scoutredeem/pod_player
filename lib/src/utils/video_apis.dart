@@ -29,6 +29,12 @@ class VideoApis {
     String videoId,
     String? hash,
   ) async {
+    final podCache = PodUrlCacheSingleton();
+    final cachedUrls = podCache.getUrls(videoId);
+    if (cachedUrls.isNotEmpty) {
+      return cachedUrls;
+    }
+
     try {
       final response = await _makeRequestHash(videoId, hash);
       final jsonData = jsonDecode(response.body)['request']['files'];
@@ -66,6 +72,8 @@ class VideoApis {
           ),
         );
       }
+
+      podCache.addUrls(videoId, vimeoQualityUrls);
 
       return vimeoQualityUrls;
     } catch (error) {
@@ -134,6 +142,12 @@ class VideoApis {
     String youtubeIdOrUrl,
     bool live,
   ) async {
+    final podCache = PodUrlCacheSingleton();
+    final cachedUrls = podCache.getUrls(youtubeIdOrUrl);
+    if (cachedUrls.isNotEmpty) {
+      return cachedUrls;
+    }
+
     try {
       final yt = YoutubeExplode();
       final urls = <VideoQalityUrls>[];
@@ -161,6 +175,9 @@ class VideoApis {
       }
       // Close the YoutubeExplode's http client.
       yt.close();
+
+      podCache.addUrls(youtubeIdOrUrl, urls);
+
       return urls;
     } catch (error) {
       if (error.toString().contains('XMLHttpRequest')) {
